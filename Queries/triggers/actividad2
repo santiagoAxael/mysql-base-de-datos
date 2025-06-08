@@ -1,0 +1,58 @@
+--tienda
+DELIMITER $$
+
+CREATE TRIGGER validar_cliente_vendedor
+BEFORE INSERT ON vendedores_has_clientes
+FOR EACH ROW
+BEGIN
+    DECLARE cliente_existe INT;
+
+    -- Verificar si el cliente existe
+    SELECT COUNT(*) INTO cliente_existe FROM clientes WHERE id = NEW.cliente_id;
+
+    IF cliente_existe = 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El cliente no existe, verifique el ID';
+    END IF;
+END $$
+
+DELIMITER ;
+--escuela
+DELIMITER $$
+
+CREATE TRIGGER actualizar_num_alumnos
+AFTER INSERT ON materias_has_estudiantes
+FOR EACH ROW
+BEGIN
+    UPDATE grupos
+    SET num_alumnos = num_alumnos + 1
+    WHERE id = (SELECT id FROM estudiantes WHERE id = NEW.estudiantes_iddepartamentos);
+END $$
+
+DELIMITER ;
+--liga
+DELIMITER $$
+
+CREATE TRIGGER actualizar_num_jugadores
+AFTER INSERT ON Jugadores
+FOR EACH ROW
+BEGIN
+    UPDATE Equipos
+    SET num_jugadores = (SELECT COUNT(*) FROM Jugadores WHERE equipo_id = NEW.equipo_id)
+    WHERE id = NEW.equipo_id;
+END $$
+
+DELIMITER ;
+--videojuegos
+DELIMITER $$
+
+CREATE TRIGGER reducir_vida_jugador
+AFTER INSERT ON jugadores_has_habilidades
+FOR EACH ROW
+BEGIN
+    UPDATE jugadores
+    SET vida = GREATEST(vida - (SELECT daño FROM habilidades WHERE id = NEW.habilidades_id), 0)
+    WHERE id = NEW.jugadores_id;
+END $$
+
+DELIMITER ;
